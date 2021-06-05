@@ -108,6 +108,12 @@ void OswHal::getDate(uint32_t *day, uint32_t *weekDay) {
   *day = d.Day();
 }
 
+void OswHal::getDate(uint32_t *day) {
+  RtcDateTime d = RtcDateTime();
+  d.InitWithEpoch32Time(getLocalTime());
+  *day = d.Day();
+}
+
 void OswHal::getDate(uint32_t *day, uint32_t *month, uint32_t *year) {
   RtcDateTime d = RtcDateTime();
   d.InitWithEpoch32Time(getLocalTime());

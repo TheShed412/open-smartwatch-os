@@ -138,6 +138,7 @@ class OswHal {
   uint32_t getLocalTime(void);
   void getLocalTime(uint32_t* hour, uint32_t* minute, uint32_t* second);
   void getLocalTime(uint32_t* hour, uint32_t* minute, uint32_t* second, bool* afterNoon);
+  void getDate(uint32_t *day);
   void getDate(uint32_t* day, uint32_t* weekDay);
   void getDate(uint32_t* day, uint32_t* month, uint32_t* year);
   void getWeekdayString(int firstNChars, string* output);

@@ -20,6 +20,14 @@ float accelT, accelX, accelY, accelZ;
 static uint8_t dev_addr;
 uint8_t act_int;
 uint32_t step_count = 0;
+uint32_t curr_day;
+
+// TEMP FOR TESTING
+uint32_t curr_sec;
+uint32_t curr_min = 0;
+uint32_t curr_hour;
+
+uint32_t prev_min = 0;
 
 static float lsb_to_ms2(int16_t accel_data, uint8_t g_range, uint8_t bit_width) {
   float accel_ms2;
@@ -213,8 +221,8 @@ void OswHal::setupSensors() {
   rslt = bma400_interface_init(&bma, BMA400_I2C_INTF);
   bma400_check_rslt("bma400_interface_init", rslt);
 
-  // rslt = bma400_soft_reset(&bma);
-  // bma400_check_rslt("bma400_soft_reset", rslt);
+  rslt = bma400_soft_reset(&bma);
+  bma400_check_rslt("bma400_soft_reset", rslt);
 
   rslt = bma400_init(&bma);
   bma400_check_rslt("bma400_init", rslt);
@@ -283,6 +291,15 @@ void OswHal::updateAccelerometer(void) {
 
   rslt = bma400_get_accel_data(BMA400_DATA_SENSOR_TIME, &data, &bma);
   bma400_check_rslt("bma400_get_accel_data", rslt);
+
+  prev_min = curr_min;
+  getUTCTime(&curr_hour, &curr_min, &curr_sec);
+
+  if (prev_min != curr_min) {
+    Serial.println("NEW MINUTE: resetting step count");
+    setupSensors();
+    step_count = 0;
+  }
 
   /* 12-bit accelerometer at range 2G */
   accelX = lsb_to_ms2(data.x, 2, 12);

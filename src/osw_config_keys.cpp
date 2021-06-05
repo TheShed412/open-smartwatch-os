@@ -12,7 +12,7 @@ OswConfigKeyString wifiSsid("a", "WiFi", "SSID", "Your wifi name", CONFIG_WIFI_S
 OswConfigKeyPassword wifiPass("b", "WiFi", "Password", nullptr, CONFIG_WIFI_PASS);
 
 OswConfigKeyShort settingDisplayBrightness("s1", "Settings", "Display Brightness", "from 0 to 255", 128);
-OswConfigKeyShort settingDisplayTimeout("s2", "Settings", "Display Timeout", "Seconds until the screen blanks", 10);
+OswConfigKeyShort settingDisplayTimeout("s2", "Settings", "Display Timeout", "Seconds until the screen blanks", 1000);
 OswConfigKeyBool settingDisplayOverlays("s3", "Settings", "Display Overlays", "Show overlays (at all)", true);
 OswConfigKeyBool settingDisplayOverlaysOnWatchScreen("s4", "Settings", "Display Watchface Overlays",
                                                      "Show overlays on watchfaces", false);
