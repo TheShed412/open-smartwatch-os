@@ -34,6 +34,7 @@ class OswHal {
   void setupDisplay(void);
   void setupPower(void);
   void setupSensors(void);
+  void setupSensors(bool);
   void setupTime(void);
 #if defined(GPS_EDITION)
   uint8_t setupSD(void);

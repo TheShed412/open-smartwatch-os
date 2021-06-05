@@ -27,7 +27,7 @@ uint32_t curr_sec;
 uint32_t curr_min = 0;
 uint32_t curr_hour;
 
-uint32_t prev_min = 0;
+uint32_t prev_min = 0; // this is getting reset every time it wakes up
 
 static float lsb_to_ms2(int16_t accel_data, uint8_t g_range, uint8_t bit_width) {
   float accel_ms2;
@@ -211,7 +211,9 @@ void IRAM_ATTR isrStep() {
 }
 void IRAM_ATTR isrTap() { Serial.println("Tap"); }
 
-void OswHal::setupSensors() {
+void OswHal::setupSensors() { setupSensors(false); }
+
+void OswHal::setupSensors(bool softReset) {
   struct bma400_sensor_conf accel_setting[3] = {{}};
   struct bma400_int_enable int_en[3];
   int8_t rslt = 0;
@@ -221,8 +223,10 @@ void OswHal::setupSensors() {
   rslt = bma400_interface_init(&bma, BMA400_I2C_INTF);
   bma400_check_rslt("bma400_interface_init", rslt);
 
-  rslt = bma400_soft_reset(&bma);
-  bma400_check_rslt("bma400_soft_reset", rslt);
+  if (softReset) {
+    // rslt = bma400_soft_reset(&bma);
+    // bma400_check_rslt("bma400_soft_reset", rslt);
+  }
 
   rslt = bma400_init(&bma);
   bma400_check_rslt("bma400_init", rslt);
@@ -296,8 +300,12 @@ void OswHal::updateAccelerometer(void) {
   getUTCTime(&curr_hour, &curr_min, &curr_sec);
 
   if (prev_min != curr_min) {
+    Serial.print("prev: ");
+    Serial.println(prev_min);
+    Serial.print("curr: ");
+    Serial.println(curr_min);
     Serial.println("NEW MINUTE: resetting step count");
-    setupSensors();
+    setupSensors(true);
     step_count = 0;
   }
 
