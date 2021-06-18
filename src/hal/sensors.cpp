@@ -6,6 +6,7 @@
 #include "bma400.h"
 #include "osw_hal.h"
 #include "osw_pins.h"
+#include "osw_config.h"
 
 /* Earth's gravity in m/s^2 */
 #define GRAVITY_EARTH (9.80665f)
@@ -20,14 +21,9 @@ float accelT, accelX, accelY, accelZ;
 static uint8_t dev_addr;
 uint8_t act_int;
 uint32_t step_count = 0;
-uint32_t curr_day;
+uint32_t curr_day = 0;
 
-// TEMP FOR TESTING
-uint32_t curr_sec;
-uint32_t curr_min = 0;
-uint32_t curr_hour;
-
-uint32_t prev_min = 0; // this is getting reset every time it wakes up
+unsigned int prev_day = 95; // this is getting reset every time it wakes up
 
 static float lsb_to_ms2(int16_t accel_data, uint8_t g_range, uint8_t bit_width) {
   float accel_ms2;
@@ -224,8 +220,8 @@ void OswHal::setupSensors(bool softReset) {
   bma400_check_rslt("bma400_interface_init", rslt);
 
   if (softReset) {
-    // rslt = bma400_soft_reset(&bma);
-    // bma400_check_rslt("bma400_soft_reset", rslt);
+    rslt = bma400_soft_reset(&bma);
+    bma400_check_rslt("bma400_soft_reset", rslt);
   }
 
   rslt = bma400_init(&bma);
@@ -282,6 +278,9 @@ void OswHal::setupSensors(bool softReset) {
 
   attachInterrupt(BMA_INT_1, isrStep, FALLING);
   attachInterrupt(BMA_INT_2, isrTap, FALLING);
+
+  // For some reason this is always returning 0
+  prev_day = OswConfig::getInstance()->getUShort("prev_day", 99);
 }
 
 bool OswHal::hasBMA400(void) { return _hasBMA400; }
@@ -296,17 +295,28 @@ void OswHal::updateAccelerometer(void) {
   rslt = bma400_get_accel_data(BMA400_DATA_SENSOR_TIME, &data, &bma);
   bma400_check_rslt("bma400_get_accel_data", rslt);
 
-  prev_min = curr_min;
-  getUTCTime(&curr_hour, &curr_min, &curr_sec);
+  prev_day = curr_day;
+  getDate(&curr_day);
 
-  if (prev_min != curr_min) {
-    Serial.print("prev: ");
-    Serial.println(prev_min);
-    Serial.print("curr: ");
-    Serial.println(curr_min);
-    Serial.println("NEW MINUTE: resetting step count");
-    setupSensors(true);
-    step_count = 0;
+  // Figure out if step counter needs reset
+  if (prev_day != 99 && curr_day != 0) {
+    if (prev_day != curr_day && prev_day != 0) {
+      prev_day = curr_day;
+      OswConfig::getInstance()->enableWrite();
+      OswConfig::getInstance()->putUShort("prev_day", prev_day);
+      OswConfig::getInstance()->disableWrite();
+      setupSensors(true);
+    } else if (prev_day == 0) {
+      // If getting the last day value failed, I want to try again
+      prev_day = OswConfig::getInstance()->getUShort("prev_day", 99);
+      if (prev_day != 99 && prev_day != curr_day) {
+        prev_day = curr_day;
+        OswConfig::getInstance()->enableWrite();
+        OswConfig::getInstance()->putUShort("prev_day", prev_day);
+        OswConfig::getInstance()->disableWrite();
+        setupSensors(true);
+      }
+    }
   }
 
   /* 12-bit accelerometer at range 2G */

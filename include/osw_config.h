@@ -16,6 +16,8 @@
 #define _OSW_CONFIG_SETTER(T, F)           \
   inline void F(const char* id, T value) { \
     if (this->readOnly) return;            \
+    Serial.print(String(__FILE__) + ": Setting key id "); \
+    Serial.println(id);                    \
     this->prefs.F(id, value);              \
   }
 #define _OSW_CONFIG_SET_GET(T, FG, FS) _OSW_CONFIG_GETTER(T, FG) _OSW_CONFIG_SETTER(T, FS)
